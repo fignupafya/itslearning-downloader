@@ -36,12 +36,11 @@ There are some optional parameters in the script that you can adjust to your pre
 - path_for_base_location (default = Desktop): The path for the base location where the downloaded files will be saved. You can change it to any path you want.
 - powerpoint_extensions (default = [".pptx", ".pptm", ".potx", ".potm", ".ppsx", ".ppsm", ".ppt"]): The list of file extensions that the script will treat as Microsoft - PowerPoint files.
 - word_extensions (default = [".docx", ".docm", ".dotx", ".dotm", ".odt", ".rtf"]): The list of file extensions that the script will treat as Microsoft Word files.
-- extension_blacklists (default = [".xlsx"]): The list of file extensions that the script will not download.
-- file_logos_to_skip (default = ["ExtensionId=5002", "ExtensionId=5010","ExtensionId=5006","ExtensionId=5000"]): The list of file logos that the script will skip.
+- extension_blacklists (default = [".xlsx"]): The list of file extensions that the script will not download.  
 
-Note: The script is only capable of downloading files with PowerPoint-style preview, Microsoft Word file preview, no preview, and PDF files. 
+Note: The script is only capable of downloading files with PowerPoint-style preview, Microsoft Word file preview, no preview, and PDF files. Others will be ignored. 
 
-Note2: In case of an error please create "New Issue" on this repository from Issues tab above to report the bug. You can try to insert the ExtensionId value of the problematic file's logo's URL to the `file_logos_to_skip` in "ExtensionId=xxxx" format.
+Note2: In case of an error please create "New Issue" on this repository from Issues tab above to report the bug.
 
 ### Disclaimer
 This script is for educational purposes only. The use of this script for any other purpose is at your own risk. The author is not responsible for any damages resulting from the use of this script.
