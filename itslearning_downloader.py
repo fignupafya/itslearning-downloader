@@ -10,42 +10,38 @@ from urllib.parse import urlparse
 
 
 
+
+#You can insert your credentials or you can type them during runtime
 mail = ""
 password = ""
 
+#You can insert urls for lectures/files as seperate strings or you can add them during runtime
+folder_download_links = []
 
-
-folder_download_links = ["https://buei.itslearning.com/ContentArea/ContentArea.aspx?LocationID=73174&LocationType=1",
-                         "https://buei.itslearning.com/Folder/processfolder.aspx?FolderID=3165744",
-                         "https://buei.itslearning.com/ContentArea/ContentArea.aspx?LocationID=73166&LocationType=1",
-                         "https://buei.itslearning.com/ContentArea/ContentArea.aspx?LocationID=69843&LocationType=1",
-                         "https://buei.itslearning.com/ContentArea/ContentArea.aspx?LocationID=73150&LocationType=1",
-                         "https://buei.itslearning.com/ContentArea/ContentArea.aspx?LocationID=70045&LocationType=1"]
-
-
-
+#You can increase the values depending on your connection speed
 max_file_download_time = 60
+max_delay_for_page_to_load = 60
 
 delay_between_files = 0.3
 
-max_delay_for_page_to_load = 10
 
 
-
+#You can change the path as you want
 path_for_base_location = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
+
+#Name of the root folder which will contain the lectures and folders
 main_folder_name = "Itslearning Downloads"
 
 main_path = os.path.join(path_for_base_location, main_folder_name)
 
-default_download_dir = os.path.join(main_path, "Temp_folder_for_downloads")
 
 
 
-
+#extensions to identify Views of office iframe: Powerpoint view, Word view,
 powerpoint_extensions = [".pptx", ".pptm", ".potx", ".potm", ".ppsx", ".ppsm", ".ppt"]
 word_extensions = [".docx", ".docm", ".dotx", ".dotm", ".odt", ".rtf"]
+#extensions to ignore
 extension_blacklists = [".xlsx"]
-file_logos_to_skip = ["ExtensionId=5002", "ExtensionId=5010","ExtensionId=5006"]
 
 
 
@@ -54,11 +50,7 @@ file_logos_to_skip = ["ExtensionId=5002", "ExtensionId=5010","ExtensionId=5006"]
 
 
 
-
-
-
-
-
+default_download_dir = os.path.join(main_path, "Temp_folder_for_downloads")
 options = Options()
 options.add_argument("window-size=700,700")
 options.add_argument("--incognito")
@@ -69,21 +61,38 @@ options.add_experimental_option('prefs', {
 })
 browser = webdriver.Chrome(options=options)
 skip_log = "Skip Logs:\n\n"
+not_downloadable=[]
+
+def cls():
+    if os.name == 'nt':
+        os.system('cls')
+    else:
+        os.system('clear')
+
+def skip(filename,link):
+    global skip_log
+    if skip_log == "Skip Logs:\n\n":
+        cls()
+        print("\nSkip Logs: \n")
+    print("Skipped", filename, sep="\t")
+    skip_log += ("Skipped" + "\t" + filename + "\t" + link + "\n")
 
 
 def login():
     global mail
     global password
+    browser.get("https://buei.itslearning.com/")
+    sleep(3)
+    cls()
+
     if mail == "":
         mail = input("Enter your email adress for Itslearning: ")
+    mailabox = browser.find_element(By.NAME, "ctl00$ContentPlaceHolder1$Username$input")
+    mailabox.send_keys(mail)
 
     if password == "":
         password = input("Enter your password for Itslearning: ")
 
-    browser.get("https://buei.itslearning.com/")
-
-    mailabox = browser.find_element(By.NAME, "ctl00$ContentPlaceHolder1$Username$input")
-    mailabox.send_keys(mail)
     passbox = browser.find_element(By.NAME, "ctl00$ContentPlaceHolder1$Password$input")
     passbox.send_keys(password)
     sleep(0.2)
@@ -139,15 +148,23 @@ def download_office_text(link):
     download_button.click()
 
 
-def download_others(link):
+def download_others(filename,link):
+    global not_downloadable
     browser.get(link)
-    iframe = WebDriverWait(browser, max_delay_for_page_to_load).until(EC.presence_of_element_located(
-        (By.XPATH, "//iframe[@id='ctl00_ContentPlaceHolder_ExtensionIframe']")))
-    browser.switch_to.frame(iframe)
-    download_button = browser.find_element(By.XPATH,
-                                           "//a[@id='ctl00_ctl00_MainFormContent_ResourceContent_DownloadButton_DownloadLink']")
-    browser.get(download_button.get_attribute("href"))
 
+    iframes = browser.find_elements(By.ID, "ctl00_ContentPlaceHolder_ExtensionIframe")
+    if len(iframes) > 0:
+        iframe = iframes[0]
+        browser.switch_to.frame(iframe)
+        buttons = browser.find_elements(By.ID, "ctl00_ctl00_MainFormContent_ResourceContent_DownloadButton_DownloadLink")
+        if len(buttons) > 0:
+            browser.get(buttons[0].get_attribute("href"))
+        else:
+            not_downloadable.append(link)
+            skip(filename,link)
+    else:
+        not_downloadable.append(link)
+        skip(filename, link)
 
 def download_the_folder(link, folder_path):
     global skip_log
@@ -165,7 +182,6 @@ def download_the_folder(link, folder_path):
     files_to_ignore = ["TestID", "NoteID"]
     files = []
     folders = []
-    skipped = []
     for item in items:
         if "FolderID" in item.get_attribute("href"):
             folders.append((item.text.replace("/", "_"), item.get_attribute("href")))
@@ -173,11 +189,7 @@ def download_the_folder(link, folder_path):
         if not any(file in item.get_attribute("href") for file in files_to_ignore):
             file_ext = os.path.splitext(item.text)[-1]
             if file_ext in extension_blacklists:
-                # buraya atlandı printleri koyulacak
-                if skip_log == "Skip Logs:\n\n":
-                    print("\nSkip Logs: \n")
-                print("Skipped", item.text, item.get_attribute("href"), sep="\t")
-                skip_log += ("Skipped" + "\t" + item.text + "\t" + item.get_attribute("href") + "\n")
+                skip(item.text,item.get_attribute("href"))
                 continue
             files.append((item.text.replace("/", "_"), item.get_attribute("href")))
 
@@ -191,25 +203,17 @@ def download_the_folder(link, folder_path):
         elif file_extension in word_extensions:
             download_office_text(download_link)
         else:
-            browser.get(download_link)
-            page_source = browser.page_source
-            if not any(text in page_source for text in file_logos_to_skip):
-                download_others(download_link)
-            else:
-                if skip_log == "Skip Logs:\n\n":
-                    print("\nSkip Logs: \n")
-                print("Skipped", i[0], i[1], sep="\t")
-                skip_log += ("Skipped" + "\t" + i[0] + "\t" + i[1] + "\n")
-                skipped.append(i[0])
+            download_others(i[0],download_link)
         WebDriverWait(browser, delay_between_files)
         sleep(delay_between_files)
 
     # MOVE FILES
     for i in files:
-        if i[0] not in skipped:
-            WebDriverWait(browser, max_file_download_time).until(
-                lambda driver: os.path.exists(os.path.join(default_download_dir, i[0])))
+        if i[1] not in not_downloadable:
+            WebDriverWait(browser, max_file_download_time).until(lambda driver: os.path.exists(os.path.join(default_download_dir, i[0])))
             shutil.move(os.path.join(default_download_dir, i[0]), folder_path)
+        WebDriverWait(browser, delay_between_files)
+        sleep(delay_between_files)
 
     for i in folders:
         download_the_folder(i[1], os.path.join(folder_path, i[0]))
@@ -254,9 +258,6 @@ def start_downloading():
         browser.get(i)
         page_source = browser.page_source
         if want_to_rename_lectures != "y" and "id=\"link-resources\"" in page_source:
-            print("Link")
-            print(browser.find_element(By.ID, "link-resources").get_attribute("href"))
-            print(browser.find_element(By.CLASS_NAME, "l-main-content-heading").text)
             link_to_resources = browser.find_element(By.ID, "link-resources").get_attribute("href")
             path_to_pass = os.path.join(main_path,
                                         browser.find_element(By.CLASS_NAME, "l-main-content-heading").text.replace("/",
@@ -267,6 +268,8 @@ def start_downloading():
             path_to_pass = os.path.join(main_path, folder_name)
             links_and_names.append((i, path_to_pass))
 
+    cls()
+    print("Download started")
     for i in links_and_names:
         download_the_folder(i[0], i[1])
 
@@ -276,26 +279,29 @@ def start_downloading():
         print(f"Error: {default_download_dir} : {e.strerror}")
 
 
+def end_sequence():
+    global skip_log
+    not_downloadable=[]
+    print("\n\nDownloads complete \n")
+
+    if skip_log != "Skip Logs:\n\n":
+        wanna_log = input("Do you want to save Skip Logs? (Y/N) : ").lower().strip()
+        if wanna_log == "y":
+            text_file_path = os.path.join(main_path, 'skip_log.txt')
+
+            with open(text_file_path, 'w', encoding='utf-8') as file:
+                file.write(skip_log)
+            print("Log saved")
+        skip_log = "Skip Logs:\n\n"
+
+
+
+
+
 login()
 start_downloading()
-
-
-
-print("\n\nDownloads complete \n")
-
-if skip_log != "Skip Logs:\n\n":
-    wanna_log = input("Do you want to save Skip Logs? (Y/N) : ").lower().strip()
-
-    if wanna_log == "y":
-        text_file_path = os.path.join(main_path, 'skip_log.txt')
-
-        with open(text_file_path, 'w', encoding='utf-8') as file:
-            file.write(skip_log)
-        print("Log saved")
-
-
+end_sequence()
 
 input("\n\nPress enter to end program\n")
 print("Bye :)\n\n\n")
-sleep(0.2)
 browser.quit()
