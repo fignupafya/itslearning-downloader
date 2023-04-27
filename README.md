@@ -41,7 +41,7 @@ There are some optional parameters in the script that you can adjust to your pre
 
 Note: The script is only capable of downloading files with PowerPoint-style preview, Microsoft Word file preview, no preview, and PDF files. 
 
-Note2: In case of an error you can insert the ExtensionId value of the file's logo's URL to the `file_logos_to_skip` in "ExtensionId=xxxx" format.
+Note2: In case of an error please create "New Issue" on this repository from Issues tab above to report the bug. You can try to insert the ExtensionId value of the problematic file's logo's URL to the `file_logos_to_skip` in "ExtensionId=xxxx" format.
 
 ### Disclaimer
 This script is for educational purposes only. The use of this script for any other purpose is at your own risk. The author is not responsible for any damages resulting from the use of this script.
