@@ -75,7 +75,7 @@ def skip(filename,link):
         cls()
         print("\nSkip Logs: \n")
     print("Skipped", filename, sep="\t")
-    skip_log += ("Skipped" + "\t" + filename + "\t" + link + "\n")
+    skip_log += "Skipped" + "\t" + filename + "\t" + link + "\n"
 
 
 def login():
@@ -167,7 +167,6 @@ def download_others(filename,link):
         skip(filename, link)
 
 def download_the_folder(link, folder_path):
-    global skip_log
 
     if os.path.exists(folder_path):
         try:
@@ -257,12 +256,18 @@ def start_downloading():
     for i in folder_download_links:
         browser.get(i)
         page_source = browser.page_source
-        if want_to_rename_lectures != "y" and "id=\"link-resources\"" in page_source:
+        path_to_pass=""
+        if "id=\"link-resources\"" in page_source:
             link_to_resources = browser.find_element(By.ID, "link-resources").get_attribute("href")
-            path_to_pass = os.path.join(main_path,
-                                        browser.find_element(By.CLASS_NAME, "l-main-content-heading").text.replace("/",
-                                                                                                                   "_")).strip()
+
+            if want_to_rename_lectures == "y":
+                folder_name = input("\nName for the folder currently displayed in the browser: ").replace("/","_").strip()
+                path_to_pass = os.path.join(main_path, folder_name)
+            else:
+                path_to_pass = os.path.join(main_path,browser.find_element(By.CLASS_NAME, "l-main-content-heading").text.replace("/","_")).strip()
+
             links_and_names.append((link_to_resources, path_to_pass))
+
         else:
             folder_name = input("\nName for the folder currently displayed in the browser: ").replace("/", "_").strip()
             path_to_pass = os.path.join(main_path, folder_name)
@@ -281,13 +286,15 @@ def start_downloading():
 
 def end_sequence():
     global skip_log
+    global not_downloadable
     not_downloadable=[]
     print("\n\nDownloads complete \n")
-
+    text_file_path = os.path.join(main_path, 'skip_log.txt')
+    if os.path.exists(text_file_path):
+        os.remove(text_file_path)
     if skip_log != "Skip Logs:\n\n":
         wanna_log = input("Do you want to save Skip Logs? (Y/N) : ").lower().strip()
         if wanna_log == "y":
-            text_file_path = os.path.join(main_path, 'skip_log.txt')
 
             with open(text_file_path, 'w', encoding='utf-8') as file:
                 file.write(skip_log)
