@@ -183,7 +183,7 @@ def download_the_folder(link, folder_path):
     folders = []
     for item in items:
         if "FolderID" in item.get_attribute("href"):
-            folders.append((item.text.replace("/", "_"), item.get_attribute("href")))
+            folders.append((item.text.replace("/", "_").replace(":", " "), item.get_attribute("href")))
             continue
         if not any(file in item.get_attribute("href") for file in files_to_ignore):
             file_ext = os.path.splitext(item.text)[-1]
