@@ -1,3 +1,6 @@
+!!!!!OUTDATED!!!!!
+
+
 # 📙 Itslearning File Downloader
 
 This Python script uses Selenium and Chrome Webdriver to interact with Itslearning and automate the download process of lecture files from Itslearning. You can provide URLs for lectures - folders to download them to your local machine. 
